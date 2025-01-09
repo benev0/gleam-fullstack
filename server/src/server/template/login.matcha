@@ -1,0 +1,15 @@
+<div>
+    <h1>Login</h1>
+    <form hx-put="/login"
+        hx-target="#web-content"
+        hx-swap="innerHTML"
+        hx-ext="json-enc">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="username" type="text" />
+        <br/>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" />
+        <br/>
+        <button>Login</button>
+    </form>
+</div>

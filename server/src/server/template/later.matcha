@@ -1,0 +1,4 @@
+<script type="module" src="/client.min.mjs"></script>
+<body>
+    <div id="client"></div>
+</body>
