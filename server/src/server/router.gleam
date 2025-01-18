@@ -5,7 +5,7 @@ import gleam/int
 import gleam/option
 import gleam/result
 import server/template/index as index_template
-import server/template/later as todo_template
+import server/template/later as _todo_template
 import server/template/list as list_template
 import server/template/login as login_template
 import server/template/profile as profile_template
@@ -14,11 +14,10 @@ import server/web
 import wisp
 
 pub fn handle_request(req: wisp.Request, ctx: web.Context) -> wisp.Response {
-  // what?
-  // let req = wisp.method_override(req)
+  let req = wisp.method_override(req)
   use <- wisp.log_request(req)
   use <- wisp.rescue_crashes
-  // use req <- wisp.handle_head(req)
+  use req <- wisp.handle_head(req)
   use ctx <- web.authenticate(req, ctx)
   use <- wisp.serve_static(req, under: "/", from: ctx.static_path)
 
@@ -57,7 +56,7 @@ fn login_decoder() -> decode.Decoder(web.LoginInfo) {
   decode.success(web.LoginInfo(username:, password:))
 }
 
-fn login(req: wisp.Request, ctx: web.Context) -> wisp.Response {
+fn login(req: wisp.Request, _ctx: web.Context) -> wisp.Response {
   case req.method {
     http.Put -> {
       wisp.log_info("login attempt 1")

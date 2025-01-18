@@ -1490,6 +1490,15 @@ var unicode_whitespaces = [
 ].join("");
 var trim_start_regex = new RegExp(`^[${unicode_whitespaces}]*`);
 var trim_end_regex = new RegExp(`[${unicode_whitespaces}]*$`);
+function print(string2) {
+  if (typeof process === "object") {
+    process.stdout.write(string2);
+  } else if (typeof Deno === "object") {
+    Deno.stdout.writeSync(new TextEncoder().encode(string2));
+  } else {
+    console.log(string2);
+  }
+}
 function new_map() {
   return Dict.new();
 }
@@ -2631,9 +2640,13 @@ function querySelector(query) {
   return new Ok(found);
 }
 
-// build/dev/javascript/plinth/element_ffi.mjs
-function addEventListener(element3, type, listener) {
-  return element3.addEventListener(type, listener);
+// build/dev/javascript/client/add_onetime_event_listener.mjs
+function add_onetime_event_listener(element3, event_name, event_function) {
+  let onetime_fn = () => {
+    element3.removeEventListener(event_name, onetime_fn);
+    event_function();
+  };
+  return element3.addEventListener(event_name, onetime_fn);
 }
 
 // build/dev/javascript/client/cache_function.mjs
@@ -2825,13 +2838,14 @@ var app_selector = "#client";
 var container_selector = "#tab-content";
 function start_app() {
   let maybe_element = querySelector(container_selector);
+  print("starting");
   let app = application(init2, update, view);
   let $ = start2(app, app_selector, void 0);
   if (!$.isOk()) {
     throw makeError(
       "let_assert",
       "client",
-      32,
+      34,
       "start_app",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
@@ -2840,12 +2854,13 @@ function start_app() {
   let app_runtime = $[0];
   if (maybe_element.isOk()) {
     let element3 = maybe_element[0];
-    addEventListener(
+    add_onetime_event_listener(
       element3,
-      "htmx:beforeRequest",
-      (_) => {
+      "htmx:afterSwap",
+      () => {
         let _pipe = shutdown();
-        return app_runtime(_pipe);
+        app_runtime(_pipe);
+        return print("shutdown");
       }
     );
   } else {
@@ -2853,12 +2868,7 @@ function start_app() {
   return void 0;
 }
 function main() {
-  return cache_function(
-    "list_main",
-    () => {
-      return start_app();
-    }
-  );
+  return cache_function("list_main", start_app);
 }
 
 // build/.lustre/entry.mjs

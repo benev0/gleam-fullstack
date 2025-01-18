@@ -36,7 +36,7 @@ pub type LoginInfo {
 pub fn attempt_login(
   req: wisp.Request,
   resp: wisp.Response,
-  cred: LoginInfo,
+  _cred: LoginInfo,
 ) -> #(option.Option(Int), wisp.Response) {
   wisp.log_info("login attempt begin")
   let id = int.to_string(1)
