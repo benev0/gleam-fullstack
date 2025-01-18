@@ -32,7 +32,7 @@ pub fn render_tree(default_tab default_tab: String, logged_in logged_in: Bool) -
           <button hx-get=\"/pantry\" hx-target=\"#tab-content\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">pantry</button>
           <button hx-get=\"/settings\" hx-target=\"#tab-content\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">settings</button>
         </div>
-        <div id=\"tab-content\" hx-history=\"false\" role=\"tabpanel\" class=\"tab-content\">
+        <div id=\"tab-content\" role=\"tabpanel\" class=\"tab-content\">
           ")
     let tree = string_tree.append(tree, default_tab)
     let tree = string_tree.append(tree, "

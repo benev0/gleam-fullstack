@@ -1693,20 +1693,6 @@ var Effect = class extends CustomType {
     this.all = all2;
   }
 };
-function custom(run2) {
-  return new Effect(
-    toList([
-      (actions) => {
-        return run2(actions.dispatch, actions.emit, actions.select, actions.root);
-      }
-    ])
-  );
-}
-function from(effect) {
-  return custom((dispatch2, _, _1, _2) => {
-    return effect(dispatch2);
-  });
-}
 function none() {
   return new Effect(toList([]));
 }
@@ -2028,7 +2014,7 @@ if (globalThis.customElements && !globalThis.customElements.get("lustre-fragment
     }
   );
 }
-function morph(prev, next, dispatch2) {
+function morph(prev, next, dispatch) {
   let out;
   let stack = [{ prev, next, parent: prev.parentNode }];
   while (stack.length) {
@@ -2053,7 +2039,7 @@ function morph(prev, next, dispatch2) {
       const created = createElementNode({
         prev: prev2,
         next: next2,
-        dispatch: dispatch2,
+        dispatch,
         stack
       });
       if (!prev2) {
@@ -2066,7 +2052,7 @@ function morph(prev, next, dispatch2) {
   }
   return out;
 }
-function createElementNode({ prev, next, dispatch: dispatch2, stack }) {
+function createElementNode({ prev, next, dispatch, stack }) {
   const namespace = next.namespace || "http://www.w3.org/1999/xhtml";
   const canMorph = prev && prev.nodeType === Node.ELEMENT_NODE && prev.localName === next.tag && prev.namespaceURI === (next.namespace || "http://www.w3.org/1999/xhtml");
   const el = canMorph ? prev : namespace ? document.createElementNS(namespace, next.tag) : document.createElement(next.tag);
@@ -2099,7 +2085,7 @@ function createElementNode({ prev, next, dispatch: dispatch2, stack }) {
         prevAttributes.delete(name);
     } else if (name.startsWith("on")) {
       const eventName = name.slice(2);
-      const callback = dispatch2(value4, eventName === "input");
+      const callback = dispatch(value4, eventName === "input");
       if (!handlersForEl.has(eventName)) {
         el.addEventListener(eventName, lustreGenericEventHandler);
       }
@@ -2108,7 +2094,7 @@ function createElementNode({ prev, next, dispatch: dispatch2, stack }) {
         prevHandlers.delete(eventName);
     } else if (name.startsWith("data-lustre-on-")) {
       const eventName = name.slice(15);
-      const callback = dispatch2(lustreServerEventHandler);
+      const callback = dispatch(lustreServerEventHandler);
       if (!handlersForEl.has(eventName)) {
         el.addEventListener(eventName, lustreGenericEventHandler);
       }
@@ -2367,14 +2353,14 @@ var LustreClientApplication = class _LustreClientApplication {
         this.#queue = [];
         this.#model = action[0][0];
         const vdom = this.#view(this.#model);
-        const dispatch2 = (handler, immediate = false) => (event2) => {
+        const dispatch = (handler, immediate = false) => (event2) => {
           const result = handler(event2);
           if (result instanceof Ok) {
             this.send(new Dispatch(result[0], immediate));
           }
         };
         const prev = this.root.firstChild ?? this.root.appendChild(document.createTextNode(""));
-        morph(prev, vdom, dispatch2);
+        morph(prev, vdom, dispatch);
       }
     } else if (action instanceof Dispatch) {
       const msg = action[0];
@@ -2424,14 +2410,14 @@ var LustreClientApplication = class _LustreClientApplication {
     this.#tickScheduled = void 0;
     this.#flush(effects);
     const vdom = this.#view(this.#model);
-    const dispatch2 = (handler, immediate = false) => (event2) => {
+    const dispatch = (handler, immediate = false) => (event2) => {
       const result = handler(event2);
       if (result instanceof Ok) {
         this.send(new Dispatch(result[0], immediate));
       }
     };
     const prev = this.root.firstChild ?? this.root.appendChild(document.createTextNode(""));
-    morph(prev, vdom, dispatch2);
+    morph(prev, vdom, dispatch);
   }
   #flush(effects = []) {
     while (this.#queue.length > 0) {
@@ -2442,7 +2428,7 @@ var LustreClientApplication = class _LustreClientApplication {
     }
     while (effects.length > 0) {
       const effect = effects.shift();
-      const dispatch2 = (msg) => this.send(new Dispatch(msg));
+      const dispatch = (msg) => this.send(new Dispatch(msg));
       const emit2 = (event2, data) => this.root.dispatchEvent(
         new CustomEvent(event2, {
           detail: data,
@@ -2453,7 +2439,7 @@ var LustreClientApplication = class _LustreClientApplication {
       const select = () => {
       };
       const root = this.root;
-      effect({ dispatch: dispatch2, emit: emit2, select, root });
+      effect({ dispatch, emit: emit2, select, root });
     }
     if (this.#queue.length > 0) {
       this.#flush(effects);
@@ -2553,7 +2539,7 @@ var LustreServerApplication = class _LustreServerApplication {
     }
     while (effects.length > 0) {
       const effect = effects.shift();
-      const dispatch2 = (msg) => this.send(new Dispatch(msg));
+      const dispatch = (msg) => this.send(new Dispatch(msg));
       const emit2 = (event2, data) => this.root.dispatchEvent(
         new CustomEvent(event2, {
           detail: data,
@@ -2564,7 +2550,7 @@ var LustreServerApplication = class _LustreServerApplication {
       const select = () => {
       };
       const root = null;
-      effect({ dispatch: dispatch2, emit: emit2, select, root });
+      effect({ dispatch, emit: emit2, select, root });
     }
     if (this.#queue.length > 0) {
       this.#flush(effects);
@@ -2594,9 +2580,6 @@ var NotABrowser = class extends CustomType {
 };
 function application(init3, update2, view2) {
   return new App(init3, update2, view2, new None());
-}
-function dispatch(msg) {
-  return new Dispatch(msg);
 }
 function shutdown() {
   return new Shutdown();
@@ -2651,6 +2634,14 @@ function querySelector(query) {
 // build/dev/javascript/plinth/element_ffi.mjs
 function addEventListener(element3, type, listener) {
   return element3.addEventListener(type, listener);
+}
+
+// build/dev/javascript/client/cache_function.mjs
+function cache_function(name, main_fn) {
+  if (!document.lustre) {
+    document.lustre = {};
+  }
+  document.lustre[name] = main_fn;
 }
 
 // build/dev/javascript/client/client.mjs
@@ -2831,16 +2822,17 @@ function view(model) {
   );
 }
 var app_selector = "#client";
-function main() {
-  let maybe_element = querySelector(app_selector);
+var container_selector = "#tab-content";
+function start_app() {
+  let maybe_element = querySelector(container_selector);
   let app = application(init2, update, view);
   let $ = start2(app, app_selector, void 0);
   if (!$.isOk()) {
     throw makeError(
       "let_assert",
       "client",
-      24,
-      "main",
+      32,
+      "start_app",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
     );
@@ -2848,24 +2840,9 @@ function main() {
   let app_runtime = $[0];
   if (maybe_element.isOk()) {
     let element3 = maybe_element[0];
-    let shutdown2 = from(
-      (_) => {
-        let _pipe = shutdown();
-        return app_runtime(_pipe);
-      }
-    );
     addEventListener(
       element3,
-      "stop-internal",
-      (_) => {
-        let _pipe = new ExternalSignal(shutdown2);
-        let _pipe$1 = dispatch(_pipe);
-        return app_runtime(_pipe$1);
-      }
-    );
-    addEventListener(
-      element3,
-      "stop-external",
+      "htmx:beforeRequest",
       (_) => {
         let _pipe = shutdown();
         return app_runtime(_pipe);
@@ -2874,6 +2851,14 @@ function main() {
   } else {
   }
   return void 0;
+}
+function main() {
+  return cache_function(
+    "list_main",
+    () => {
+      return start_app();
+    }
+  );
 }
 
 // build/.lustre/entry.mjs

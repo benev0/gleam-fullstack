@@ -7,7 +7,7 @@ import server/web
 import wisp
 import wisp/wisp_mist
 
-const db_name = "todomvc.sqlite3"
+const db_name = "db.db"
 
 pub fn main() {
   wisp.configure_logger()

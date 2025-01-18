@@ -1,4 +1,5 @@
 import decipher
+import ffi/cache_function
 import gleam/dict
 import gleam/dynamic
 import gleam/int
@@ -17,43 +18,22 @@ import plinth/browser/element as dom_element
 
 const app_selector: String = "#client"
 
+const container_selector: String = "#tab-content"
+
 pub fn main() {
-  let maybe_element = document.query_selector(app_selector)
+  use <- cache_function.cache_function("list_main")
+  start_app()
+}
+
+fn start_app() {
+  let maybe_element = document.query_selector(container_selector)
 
   let app = lustre.application(init, update, view)
   let assert Ok(app_runtime) = lustre.start(app, app_selector, Nil)
 
-  // case maybe_element {
-  //   Ok(element) -> {
-  //     dom_element.add_event_listener(element, "start-external", fn(_) {
-  //       let app = lustre.application(init, update, view)
-  //       let assert Ok(app_runtime) = lustre.start(app, app_selector, Nil)
-
-  //       let shutdown = effect.from(fn(_) { lustre.shutdown() |> app_runtime })
-
-  //       dom_element.add_event_listener(element, "stop-internal", fn(_) {
-  //         ExternalSignal(shutdown) |> lustre.dispatch |> app_runtime
-  //       })
-
-  //       dom_element.add_event_listener(element, "stop-external", fn(_) {
-  //         lustre.shutdown() |> app_runtime
-  //       })
-
-  //       Nil
-  //     })
-  //   }
-  //   Error(_) -> fn() { Nil }
-  // }
-
   case maybe_element {
     Ok(element) -> {
-      let shutdown = effect.from(fn(_) { lustre.shutdown() |> app_runtime })
-
-      dom_element.add_event_listener(element, "stop-internal", fn(_) {
-        ExternalSignal(shutdown) |> lustre.dispatch |> app_runtime
-      })
-
-      dom_element.add_event_listener(element, "stop-external", fn(_) {
+      dom_element.add_event_listener(element, "htmx:beforeRequest", fn(_) {
         lustre.shutdown() |> app_runtime
       })
 
