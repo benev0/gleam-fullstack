@@ -14,7 +14,7 @@ pub fn render_tree(default_tab default_tab: String, logged_in logged_in: Bool) -
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
     <script src=\"https://unpkg.com/htmx.org@2.0.3/dist/htmx.js\" integrity=\"sha384-BBDmZzVt6vjz5YbQqZPtFZW82o8QotoM7RUp5xOxV3nSJ8u2pSdtzFAbGKzTlKtg\" crossorigin=\"anonymous\"></script>
     <script src=\"https://unpkg.com/htmx-ext-ws@2.0.1/ws.js\"></script>
-    <script src=\"https://unpkg.com/htmx.org/dist/ext/json-enc.js\"></script>
+    <script src=\"/json-enc.js\"></script>
     <title>🚧 client</title>
     <link rel=\"stylesheet\" type='text/css' href=\"/main.css\">
   </head>
@@ -24,15 +24,15 @@ pub fn render_tree(default_tab default_tab: String, logged_in logged_in: Bool) -
     let tree = case logged_in {
         True -> {
                 let tree = string_tree.append(tree, "
-      <div id=\"tabs\" hx-get=\"/profile\" hx-trigger=\"load delay:100ms\" hx-target=\"#tab-content\" hx-swap=\"innerHTML\">
+      <div id=\"tabs\" hx-swap=\"innerHTML\">
         <div class=\"tab-list\" role=\"tablist\">
-          <button hx-get=\"/profile\" class=\"selected\" role=\"tab\" aria-selected=\"true\" aria-controls=\"tab-content\">profile</button>
-          <button hx-get=\"/recipes\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">recipes</button>
-          <button hx-get=\"/list\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">list</button>
-          <button hx-get=\"/pantry\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">pantry</button>
-          <button hx-get=\"/settings\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">settings</button>
+          <button hx-get=\"/profile\" hx-target=\"#tab-content\" role=\"tab\" aria-selected=\"true\" aria-controls=\"tab-content\">profile</button>
+          <button hx-get=\"/recipes\" hx-target=\"#tab-content\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">recipes</button>
+          <button hx-get=\"/list\" hx-target=\"#tab-content\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">list</button>
+          <button hx-get=\"/pantry\" hx-target=\"#tab-content\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">pantry</button>
+          <button hx-get=\"/settings\" hx-target=\"#tab-content\" role=\"tab\" aria-selected=\"false\" aria-controls=\"tab-content\">settings</button>
         </div>
-        <div id=\"tab-content\" role=\"tabpanel\" class=\"tab-content\">
+        <div id=\"tab-content\" hx-history=\"false\" role=\"tabpanel\" class=\"tab-content\">
           ")
     let tree = string_tree.append(tree, default_tab)
     let tree = string_tree.append(tree, "

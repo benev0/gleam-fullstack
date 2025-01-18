@@ -11,22 +11,57 @@ import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
+
 import plinth/browser/document
 import plinth/browser/element as dom_element
 
 const app_selector: String = "#client"
 
 pub fn main() {
+  let maybe_element = document.query_selector(app_selector)
+
   let app = lustre.application(init, update, view)
   let assert Ok(app_runtime) = lustre.start(app, app_selector, Nil)
 
-  let some_element = document.query_selector(app_selector)
-  case some_element {
-    Ok(event) ->
-      dom_element.add_event_listener(event, "close_lustre_app", fn(_) {
-        CloseSignal |> lustre.dispatch |> app_runtime
+  // case maybe_element {
+  //   Ok(element) -> {
+  //     dom_element.add_event_listener(element, "start-external", fn(_) {
+  //       let app = lustre.application(init, update, view)
+  //       let assert Ok(app_runtime) = lustre.start(app, app_selector, Nil)
+
+  //       let shutdown = effect.from(fn(_) { lustre.shutdown() |> app_runtime })
+
+  //       dom_element.add_event_listener(element, "stop-internal", fn(_) {
+  //         ExternalSignal(shutdown) |> lustre.dispatch |> app_runtime
+  //       })
+
+  //       dom_element.add_event_listener(element, "stop-external", fn(_) {
+  //         lustre.shutdown() |> app_runtime
+  //       })
+
+  //       Nil
+  //     })
+  //   }
+  //   Error(_) -> fn() { Nil }
+  // }
+
+  case maybe_element {
+    Ok(element) -> {
+      let shutdown = effect.from(fn(_) { lustre.shutdown() |> app_runtime })
+
+      dom_element.add_event_listener(element, "stop-internal", fn(_) {
+        ExternalSignal(shutdown) |> lustre.dispatch |> app_runtime
       })
-    Error(_) -> fn() { Nil }
+
+      dom_element.add_event_listener(element, "stop-external", fn(_) {
+        lustre.shutdown() |> app_runtime
+      })
+
+      Nil
+    }
+    Error(_) -> {
+      Nil
+    }
   }
 
   Nil
@@ -47,7 +82,7 @@ type Msg {
   UserAddedProduct(name: String)
   UserSavedList
   UserUpdatedQuantity(name: String, amount: Int)
-  CloseSignal
+  ExternalSignal(signal: effect.Effect(Msg))
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
@@ -74,9 +109,9 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       },
       effect.none(),
     )
-    CloseSignal -> {
-      lustre.shutdown()
-      #(model, effect.none())
+    ExternalSignal(signal) -> {
+      // lustre.shutdown()
+      #(dict.new(), effect.batch([signal]))
     }
   }
 }
@@ -90,10 +125,14 @@ fn view(model: Model) -> Element(Msg) {
     #("gap", "1em"),
   ]
 
+  let handle_click = fn(_event) { Ok(ExternalSignal(effect.none())) }
+
   html.div([attribute.style(styles)], [
     view_grocery_list(model),
     view_new_item(),
-    html.div([], [html.button([], [html.text("Sync")])]),
+    html.div([], [
+      html.button([event.on("click", handle_click)], [html.text("Sync")]),
+    ]),
   ])
 }
 

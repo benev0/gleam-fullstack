@@ -6,10 +6,9 @@ import gleam/string_tree.{type StringTree}
 
 pub fn render_tree() -> StringTree {
     let tree = string_tree.from_string("")
-    let tree = string_tree.append(tree, "<script type=\"module\" src=\"/client.min.mjs\"></script>
-<body>
-    <div id=\"client\"></div>
-</body>
+    let tree = string_tree.append(tree, "<script src=\"/test.mjs\"></script>
+<client-app></client-app>
+<div id=\"client\"></div>
 ")
 
     tree

@@ -1,4 +1,3 @@
-<script type="module" src="/client.min.mjs"></script>
-<body>
-    <div id="client"></div>
-</body>
+<script src="/test.mjs"></script>
+<client-app></client-app>
+<div id="client"></div>

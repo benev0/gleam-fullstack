@@ -13,3 +13,7 @@
 ```
 (cd client && gleam run -m lustre/dev build --minify --outdir=../server/priv/static) && (cd server && gleam run)
 ```
+## build and run 2
+```
+(cd client && gleam run -m lustre/dev build --outdir=../server/priv/static) && (cd server && gleam run)
+```

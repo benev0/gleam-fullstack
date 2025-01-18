@@ -1,0 +1,5 @@
+client-app{
+    height: 200px;
+    overflow-x: scroll;
+    display: block;
+}
